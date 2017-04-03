@@ -1,0 +1,35 @@
+void demo_animation() {
+#ifdef _WIN32
+	// No animation demo for Windows.  The problem is that every time the plot
+	// is updated, the gnuplot window grabs focus.  So you can't ever focus the
+	// terminal window to press Ctrl-C.  The only way to quit is to right-click
+	// the terminal window on the task bar and close it from there.  Other than
+	// that, it seems to work.
+	std::cout << "Sorry, the animation demo doesn't work in Windows." << std::endl;
+	return;
+#endif
+
+	Gnuplot gp;
+
+	std::cout << "Press Ctrl-C to quit (closing gnuplot window doesn't quit)." << std::endl;
+
+	gp << "set yrange [-1:1]\n";
+
+	const int N = 1000;
+	std::vector<double> pts(N);
+
+	double theta = 0;
+	while(1) {
+		for(int i=0; i<N; i++) {
+			double alpha = (double(i)/N-0.5) * 10;
+			pts[i] = sin(alpha*8.0 + theta) * exp(-alpha*alpha/2.0);
+		}
+
+		gp << "plot '-' binary" << gp.binFmt1d(pts, "array") << "with lines notitle\n";
+		gp.sendBinary1d(pts);
+		gp.flush();
+
+		theta += 0.2;
+		mysleep(100);
+	}
+}
