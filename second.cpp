@@ -18,12 +18,12 @@
 
 #define SHMSZ     100
 #define KEY_VALUE 5678
-
+Gnuplot gp;
 void  SIGINT_handler(int sig);
-void plotChart(std::vector<int> valuesToPlot, double maxX =1, double step =0.01);
+void plotChart(Gnuplot &gp,std::vector<int> valuesToPlot );
 
 int *ShmPTR;
-
+std::vector<int> data;
 int main(void)
 {
 
@@ -43,7 +43,10 @@ int main(void)
   ShmID   = shmget(MyKey, SHMSZ, 0666);
   ShmPTR  = (int *) shmat(ShmID, NULL, 0);
   pid     = *ShmPTR;                
- 
+  
+  gp << "set autoscale xy\n";
+
+
   while (1) 
   {      
 
@@ -54,6 +57,7 @@ int main(void)
     if(c == 'i' || c == 'I')
     {  
        kill(pid, SIGINT);
+	
        printf("Sent a SIGINT signal\n"); 
        sleep(1);   //Wait a second for signal to be received. TB deleted                  					 
     }
@@ -79,15 +83,17 @@ void printData(int * pointerToMemory)
   std::cout <<"s: " << s << "\n"; //To be deleted
   int amountOfData = *s;
   std::cout <<"amountOfData: " << amountOfData << "\n";  //To be deleted
-  std::vector<int> data;
-  while(i != amountOfData+1)
+  data.clear();
+  while(i != amountOfData)
   {
-    std::cout<< "*s: " << (*s) << "\n" ;  //To be deleted
-    data.push_back(*s);
     i++;
     s++;
+    std::cout<< "*s: " << (*s) << "\n" ;  //To be deleted
+    data.push_back(*s);
+
   }
-  plotChart(data);
+
+  plotChart(gp, data);
 }
 
 void  SIGINT_handler(int sig)
@@ -98,22 +104,11 @@ void  SIGINT_handler(int sig)
   signal(sig, SIGINT_handler);
 }
 
-void plotChart(std::vector<int> valuesToPlot, double maxX, double step) 
+void plotChart(Gnuplot &gp, std::vector<int> valuesToPlot )
 {
-  Gnuplot gp;
-
-  int i=0;
-  std::vector<std::pair<double, int > > dataToPlot;
-  for(double x=0; x<maxX; x+=step) 
-  {
-    double y = x*x*x;
-    i++;
-    dataToPlot.push_back(std::make_pair(x, valuesToPlot[i]));
-  }
-
-  gp << "set autoscale xy\n";
-  gp << "plot '-' with lines title 'cubic', '-' with points title 'circle'\n";
-  gp.send1d(dataToPlot);
+  gp << "plot '-' binary" << gp.binFmt1d(data, "array") << "with lines notitle\n";
+  gp.sendBinary1d(data);
+  gp.flush();
 }
 
 
