@@ -15,12 +15,13 @@
 #include  <boost/tuple/tuple.hpp>
 #include  <boost/foreach.hpp>
 #include "gnuplot-iostream.h"
+#include <fstream>
 
 #define SHMSZ     100
 #define KEY_VALUE 5678
 Gnuplot gp;
 void  SIGINT_handler(int sig);
-void plotChart(Gnuplot &gp,std::vector<int> valuesToPlot );
+void plotChart(Gnuplot &gp,std::vector<int> valuesToPlot, std::vector<std::pair<int,int>> dataToPlot );
 
 int *ShmPTR;
 std::vector<int> data;
@@ -42,9 +43,14 @@ int main(void)
 
   ShmID   = shmget(MyKey, SHMSZ, 0666);
   ShmPTR  = (int *) shmat(ShmID, NULL, 0);
-  pid     = *ShmPTR;                
-  
+  pid     = *ShmPTR;  
+   
+  //gp << "set timefmt '%d-%m %H:%M'\n";    
+  //gp << "set xrange [0:100]\n";
+ // gp << "set yrange [0:40]\n";
   gp << "set autoscale xy\n";
+ // gp << "set xdata time\n";
+ // gp << "set timefmt '%d/%m/%Y %H:%M:%S'";
 
 
   while (1) 
@@ -92,8 +98,43 @@ void printData(int * pointerToMemory)
     data.push_back(*s);
 
   }
-
-  plotChart(gp, data);
+  std::fstream ff;
+  std::string line;
+  std::vector<int> hours;
+  std::vector<int> dates;
+  std::vector<int> temp;
+  std::vector<std::pair<int,int>> dataToPlot;
+  ff.open("temperature.txt");
+  int k=0;
+  if(ff.is_open())
+  {
+    while(std::getline(ff,line))
+    {
+      std::cout <<"line: " << line <<"\n";
+      //dates.push_back(std::stoi(line.substr(5,6)));
+      //hours.push_back(std::stoi(line.substr(17,2))); 
+      hours.push_back(k); 
+      if(line.size() == 32)
+      {
+        temp.push_back(std::stoi(line.substr(line.size()-1,1)));
+      }
+      else
+      {
+       // std::string tempstr =  ;
+       // tempstr.append("...");
+        temp.push_back(std::stoi(line.substr(line.size()-2,2)));
+    
+      }
+      // line.size() <<"\n";
+      std::cout << hours[k] <<"\n";
+      std::cout<<temp[k]<<"\n";
+      dataToPlot.push_back(std::make_pair(hours[k], temp[k]));
+      k++;
+    }
+  std::cout << hours.size() << " " << temp.size() << "\n";
+  }
+  ff.close();
+  plotChart(gp, data, dataToPlot);
 }
 
 void  SIGINT_handler(int sig)
@@ -104,11 +145,16 @@ void  SIGINT_handler(int sig)
   signal(sig, SIGINT_handler);
 }
 
-void plotChart(Gnuplot &gp, std::vector<int> valuesToPlot )
+void plotChart(Gnuplot &gp, std::vector<int> valuesToPlot, std::vector<std::pair<int,int>> dataToPlot )
 {
-  gp << "plot '-' binary" << gp.binFmt1d(data, "array") << "with lines notitle\n";
-  gp.sendBinary1d(data);
+  //std::vector<std::pair<std::string,int>> data;
+gp << "plot '-' using 1:2 with lines  title 'test'\n";
+  //gp << "plot 'temperature.txt' using 1:3";
+gp.send1d(dataToPlot);
+ // gp << "plot '-' binary" << gp.binFmt1d(data, "array") << "with lines notitle\n";
+  //gp.sendBinary1d(data);
   gp.flush();
 }
+
 
 
