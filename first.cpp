@@ -1,18 +1,4 @@
-#include  <stdio.h>
-#include  <sys/types.h>
-#include  <signal.h>
-#include  <sys/ipc.h>
-#include  <sys/shm.h>
-#include  <unistd.h>
-#include  <stdlib.h>  
-#include <iostream>
-#include <vector>
-
-//void  SIGINT_handler(int);   
-void  SIGQUIT_handler(int); 
-void writeDataToMemory(std::vector<int> data, pid_t * pointerToMemory);
-void signal_received(int sig, siginfo_t *info, void *context);
-void prepareData(std::vector<int> &data, int sizeOfData);
+#include "first.h"
 
 int   ShmID;      
 pid_t *ShmPTR;    
@@ -21,25 +7,18 @@ pid_t anotherProcessPid;
 int multipl = 1;
 bool firstSignal = true;
 bool shouldDataBePrepared = false;
-
-#define SHMSZ  100
-#define KEY_VALUE 5678
-
-
-
-    
+ 
 int main(void)
 {
   pid_t pid = getpid();
   std::vector<int> data;
-  key_t MyKey;
-  MyKey = KEY_VALUE; 
+  //Key should be either generated or hard coded (it must have the same value in every application that uses particular part of shared memory)
+  key_t MyKey = KEY_VALUE; 
 
   //Prepare response for signals
   struct sigaction act;
   act.sa_sigaction = &signal_received;
   act.sa_flags = SA_SIGINFO;
-
 
   sigaction(SIGINT, &act, NULL);
   if (signal(SIGQUIT, SIGQUIT_handler) == SIG_ERR) 
@@ -59,7 +38,7 @@ int main(void)
     {
       if(shouldDataBePrepared == true)
       {	
-        prepareData(data, SHMSZ);
+        prepareDataForTest(data, SHMSZ);
 	writeDataToMemory(data, ShmPTR);
 	kill(anotherProcessPid, SIGINT);
 	shouldDataBePrepared = false;
@@ -100,8 +79,6 @@ void writeDataToMemory(std::vector<int> data, pid_t * pointerToMemory)
 	s = (int *)pointerToMemory;  
 	*s = data.size();
 
-	//std::cout <<"s: " << s << "\n"; //To be deleted
-	//std::cout <<"data.size(): " << data.size() << "\n"; //To be deleted
 	for (int c = 0; c <= data.size(); c++)
 	{ 
 	  *++s = data[c];
@@ -109,7 +86,7 @@ void writeDataToMemory(std::vector<int> data, pid_t * pointerToMemory)
 	 *s = NULL;
 }
 
-void prepareData(std::vector<int> &data, int sizeOfData)//funktor na jakas funkcje)
+void prepareDataForTest(std::vector<int> &data, int sizeOfData)//funktor na jakas funkcje)
 {
   data.clear();
   for(int i =0 ;i <=sizeOfData; i++)
