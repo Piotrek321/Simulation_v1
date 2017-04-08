@@ -1,8 +1,9 @@
 #include "second.h"
 Gnuplot gp;
 
-int *ShmPTR;
+int *SharedMemoryPTR;
 std::vector<int> data;
+int currentLine; //To find out where are you in file
 
 int main(void)
 {
@@ -13,19 +14,19 @@ int main(void)
      exit(1);
   }
  
-  pid_t   pid;
+  pid_t pid;
   key_t MyKey = KEY_VALUE;
-  int  ShmID;
+  int   SharedMemoryID;
   char  line[SHMSZ], c;
-  bool first = true;
+  bool  first = true;
 
-  ShmID   = shmget(MyKey, SHMSZ, 0666);
-  ShmPTR  = (int *) shmat(ShmID, NULL, 0);
-  pid     = *ShmPTR;  
+  SharedMemoryID   = shmget(MyKey, SHMSZ, 0666);
+  SharedMemoryPTR  = (int *) shmat(SharedMemoryID, NULL, 0);
+  pid     	   = *SharedMemoryPTR;  
  
-  gp << "set autoscale xy\n";
+ // gp << "set autoscale xy\n";
 
-  //gp << "set timefmt '%d-%m %H:%M'\n";    
+   
   //gp << "set xrange [0:100]\n";
   // gp << "set yrange [0:40]\n";
   // gp << "set xdata time\n";
@@ -79,27 +80,41 @@ void printData(int * pointerToMemory)
 void plotTemperature()
 {
   std::vector<std::pair<int,int>> dataToPlot;
-  getTemperatureFromFile("temperature.txt", dataToPlot);
+  getTemperatureFromFile("tmp.txt", dataToPlot);
 
   plotChart(gp, data, dataToPlot);
 }
 
 void getTemperatureFromFile(std::string fileName, std::vector<std::pair<int,int>> &dataToPlot)
 {
-  std::fstream ff;
+  std::fstream ff, out;
   std::string line;
   int k =0;
   ff.open(fileName);
+  out.open("out.txt");
 
   if(ff.is_open())
   {
     while(std::getline(ff,line))
     {
-      std::cout <<"line: " << line <<"\n";
-      int temp = line.size()%2;
-      temp = std::stoi(line.substr(line.size()-1-temp,1+temp));
-   
-      dataToPlot.push_back(std::make_pair(k, temp));
+      //std::cout <<"line: " << line <<"\n";
+      if(line[0] == 'Y') 
+      {
+	//std::cout <<"Y\n";
+      }else
+      {
+       //	std::cout <<"O\n";
+      }
+      out <<"20170"<< (line.substr(2,1)) << "0"<<(line.substr(4,1))<< " " <<(line.substr(6,5)) <<" " << line.substr(line.size()-2,2) << "\n";
+      out.flush();
+      std::cout <<"Date:" << (line.substr(2,3)) <<"AAA"<< "\n";
+      int temp = line.size()%2+1;
+      std::cout <<"Hour:" << (line.substr(6,5)) <<"BBB"<< "\n";
+      std::cout << "Temp:" << line.substr(line.size()-2,2) <<"CCC"<<'\n';
+      //int temp = line.size()%2;
+      //temp = std::stoi(line.substr(line.size()-1-temp,1+temp));
+      //std::cout <<"temp:" << temp <<"BBB"<< "\n";
+      //dataToPlot.push_back(std::make_pair(k, temp));
       k++;
 
     }
@@ -107,6 +122,7 @@ void getTemperatureFromFile(std::string fileName, std::vector<std::pair<int,int>
   {
     std::cout <<"sth wrung\n";
   }
+  out.close();
   ff.close();
 }
 
@@ -114,18 +130,24 @@ void  SIGINT_handler(int sig)
 {
   signal(sig, SIG_IGN);
   printf("From SIGINT: just got a %d (SIGINT ^C) signal\n", sig);
-  printData(ShmPTR);
+  printData(SharedMemoryPTR);
   plotTemperature();
   signal(sig, SIGINT_handler);
 }
 
 void plotChart(Gnuplot &gp, std::vector<int> valuesToPlot, std::vector<std::pair<int,int>> dataToPlot )
 {
-  gp << "plot '-' using 1:2 with lines  title 'test'\n";
-  gp.send1d(dataToPlot);
-  gp.flush();
+ // gp << "plot '-' using 1:2 with lines  title 'test'\n";
+//  gp.send1d(dataToPlot);
+ // gp.flush();
 //std::vector<std::pair<std::string,int>> data;
-  //gp << "plot 'temperature.txt' using 1:3";
+  gp << " set xdata time\n";
+gp << "set yrange [0:22]\n";
+  gp <<" set timefmt '%Y%m%d %H:M'\n";
+gp << "plot [:][:][:] 'out.txt' using 1:3 with lines\n";
+  //gp << "plot [:][:] 'out.txt' using 1:2\n";
+//gp.send1d(dataToPlot);
+gp.flush();
  // gp << "plot '-' binary" << gp.binFmt1d(data, "array") << "with lines notitle\n";
   //gp.sendBinary1d(data);
 

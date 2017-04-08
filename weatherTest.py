@@ -1,46 +1,46 @@
 #!/usr/bin/env python
+
 import urllib2, urllib, json, datetime, time
 import pyowm
-import  pywapi
 import string
 ### Yahoo
-baseurl = "https://query.yahooapis.com/v1/public/yql?"
-yql_query = "select * from weather.forecast where woeid=12577937 and u='c'"
-yql_url = baseurl + urllib.urlencode({'q':yql_query}) + "&format=json"
-
-result = urllib2.urlopen(yql_url).read()
-data = json.loads(result)
-temperature = data['query']['results']['channel']['item']['condition']['temp']
-
-### WeatherCom
-weather_com_result = pywapi.get_weather_from_weather_com('PLXX0014:1:PL')
+Yahoo_baseurl = "https://query.yahooapis.com/v1/public/yql?"
+Yahoo_yql_query = "select * from weather.forecast where woeid=12577937 and u='c'"
+Yahoo_yql_url = Yahoo_baseurl + urllib.urlencode({'q':Yahoo_yql_query}) + "&format=json"
 
 ### OWM
 owm = pyowm.OWM('b5df5912a869b5cf1cfa4899b10da754')  # You MUST provide a valid API key
+date = datetime.datetime.now()
+print date.hour
 
-# Will it be sunny tomorrow at this time in Milan (Italy) ?
-forecast = owm.daily_forecast("Lodz,pl")
-print forecast
+while(1):
 
-# Search for current weather in London (UK)
-observation = owm.weather_at_place("Lodz,pl")
-w = observation.get_weather()
-print(w)                      
+
+	Yahoo_result = urllib2.urlopen(Yahoo_yql_url).read()
+	Yahoo_data = json.loads(Yahoo_result)
+	Yahoo_dateTemp = Yahoo_data['query']['results']['channel']['item']['condition']['date']
+	Yahoo_tempreture = Yahoo_data['query']['results']['channel']['item']['condition']['temp']
+	Owm_forecast = owm.daily_forecast("Lodz,pl")
+	Owm_observation = owm.weather_at_place("Lodz,pl")
+	Owm_w = Owm_observation.get_weather()
+	Owm_temperature = Owm_w.get_temperature('celsius')['temp']
+	print "Temperature from Yahoo: " + Yahoo_tempreture
+	print("Temperature from OpenWeatherM: " + str(int(Owm_temperature)))
+	print "Hour: " + str(date.hour)
+	ff = open('temperature.txt', 'a')
+	ff.write("Y " + str(date.day) + "/" + str(date.month) + " " + str(date.hour) + ":00 " + str(Yahoo_tempreture) + "\n")
+	ff.write("O " + str(date.day) + "/" + str(date.month) + " " + str(date.hour) + ":00 " + str(int(Owm_temperature)) + "\n")
+	ff.close()
+	time.sleep(3600)
+
+#print forecast
+#print(w)                      
 
 #print "AAAAAAAAAAAA"
-fc = owm.three_hours_forecast('London,uk')
-f = fc.get_forecast()
+#fc = owm.three_hours_forecast('London,uk')
+#f = fc.get_forecast()
 
-lst = f.get_weathers()
+#lst = f.get_weathers()
 
 #for weather in f:
  # print (weather.get_reference_time('iso'),weather.get_temperature('celsius'))
-
-
-
-
-
-print "Temperature from Yahoo: " + temperature
-print "Temperature from weatherCom: " +weather_com_result['current_conditions']['temperature'] + "C now in Lodz.\n\n"
-print(w.get_temperature('celsius')['temp'])             
-#print "Weather.com says: It is " + string.lower(weather_com_result['current_conditions']['text']) + " and " + weather_com_result#['current_conditions']['temperature'] + "C now in New York.\n\n"

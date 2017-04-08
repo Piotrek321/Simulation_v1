@@ -1,8 +1,7 @@
 #include "first.h"
 
-int   ShmID;      
-pid_t *ShmPTR;    
-pid_t anotherProcessPid;
+int   SharedMemoryID;      
+pid_t *SharedMemoryPtr, anotherProcessPid;    
 
 int multipl = 1;
 bool firstSignal = true;
@@ -27,9 +26,9 @@ int main(void)
     exit(2);
   }
   //Prepare memory and write pid into it
-  ShmID   = shmget(MyKey, SHMSZ, IPC_CREAT | 0666);
-  ShmPTR  = (int *) shmat(ShmID, NULL, 0);
-  *ShmPTR = pid; 
+  SharedMemoryID   = shmget(MyKey, SHMSZ, IPC_CREAT | 0666);
+  SharedMemoryPtr  = (int *) shmat(SharedMemoryID, NULL, 0);
+  *SharedMemoryPtr = pid; 
 
   for (;;) 
   {        
@@ -39,7 +38,7 @@ int main(void)
       if(shouldDataBePrepared == true)
       {	
         prepareDataForTest(data, SHMSZ);
-	writeDataToMemory(data, ShmPTR);
+	writeDataToMemory(data, SharedMemoryPtr);
 	kill(anotherProcessPid, SIGINT);
 	shouldDataBePrepared = false;
       }
@@ -55,8 +54,8 @@ void  SIGQUIT_handler(int sig)
 {
   signal(sig, SIG_IGN);
   printf("From SIGQUIT: just got a %d (SIGQUIT ^\\) signal and is about to quit\n", sig);
-  shmdt(ShmPTR);
-  shmctl(ShmID, IPC_RMID, NULL);
+  shmdt(SharedMemoryPtr);
+  shmctl(SharedMemoryID, IPC_RMID, NULL);
   exit(3);
 }
 
