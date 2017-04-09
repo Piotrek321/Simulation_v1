@@ -1,8 +1,6 @@
 #!/usr/bin/env python
+import urllib2, urllib, json, datetime, time, pyowm, string
 
-import urllib2, urllib, json, datetime, time
-import pyowm
-import string
 ### Yahoo
 Yahoo_baseurl = "https://query.yahooapis.com/v1/public/yql?"
 Yahoo_yql_query = "select * from weather.forecast where woeid=12577937 and u='c'"
