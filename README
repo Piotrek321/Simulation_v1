@@ -17,4 +17,4 @@ sudo apt-get install gnuplot
 sudo apt-get install libboost-all-dev
 
 How to compile:
-g++ -std=c++11 second.cpp -o second.o -lboost_iostreams -lboost_system -lboost_filesystem -lcurl -l json
+g++ -std=c++11 plotter.cpp -o plotter.o -lboost_iostreams -lboost_system -lboost_filesystem -lcurl -l json
