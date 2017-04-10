@@ -5,7 +5,7 @@ import urllib2, urllib, json, datetime, time, pyowm, string
 Yahoo_baseurl = "https://query.yahooapis.com/v1/public/yql?"
 Yahoo_yql_query = "select * from weather.forecast where woeid=12577937 and u='c'"
 Yahoo_yql_url = Yahoo_baseurl + urllib.urlencode({'q':Yahoo_yql_query}) + "&format=json"
-
+print "URL: " + Yahoo_yql_url
 ### OWM
 owm = pyowm.OWM('b5df5912a869b5cf1cfa4899b10da754')  # You MUST provide a valid API key
 date = datetime.datetime.now()
