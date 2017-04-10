@@ -118,5 +118,28 @@ void plotChart(Gnuplot &gp, std::vector<int> valuesToPlot, std::vector<std::pair
   gp.flush();
 }
 
+void getTemperatureFromYahoo()
+{
+	CURL * crl = curl_easy_init();
+	if(crl)
+	{
+		curl_easy_setopt(crl, CURLOPT_URL, "https://query.yahooapis.com/v1/public/yql?q=select%20item.condition%20from%20weather.forecast%20where%20woeid%20%3D%2012577937&format=json&env=store%3A%2F%2Fdatatables.org%2Falltableswithkeys");
+//		curl_easy_setopt(crl, CURLOPT_URL, "https://query.yahooapis.com/v1/public/yql?q=select%20item.condition%20from%20weather.forecast%20where%20woeid%20%3D%2012577937&format=json&env=store%3A%2F%2Fdatatables.org%2Falltableswithkeys");
 
+		curl_easy_setopt(crl, CURLOPT_HTTPGET, 1L);
+		curl_easy_perform(crl);
+		curl_easy_cleanup(crl);
+	}
+}
 
+void getTemperatureFromOWM()
+{
+	CURL * crl = curl_easy_init();
+	if(crl)
+	{
+		curl_easy_setopt(crl, CURLOPT_URL, "api.openweathermap.org/data/2.5/weather?id=3093133&appid=b5df5912a869b5cf1cfa4899b10da754");
+		curl_easy_setopt(crl, CURLOPT_HTTPGET, 1L);
+		curl_easy_perform(crl);
+		curl_easy_cleanup(crl);
+	}
+}

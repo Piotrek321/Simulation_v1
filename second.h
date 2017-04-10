@@ -6,7 +6,6 @@
 #include  <unistd.h>
 #include  <stdlib.h>  
 #include  <iostream>
-#include  <fstream>
 #include  <vector>
 #include  <map>
 #include  <limits>
@@ -15,6 +14,9 @@
 #include  <boost/tuple/tuple.hpp>
 #include  <boost/foreach.hpp>
 #include  "gnuplot-iostream.h"
+#include  <algorithm>
+#include  <curl/curl.h>
+#include  <sstream>
 #include  <fstream>
 
 #define SHMSZ     100
@@ -24,4 +26,5 @@ void  SIGINT_handler(int sig);
 void plotChart(Gnuplot &gp,std::vector<int> valuesToPlot, std::vector<std::pair<int,int>> dataToPlot );
 void getTemperatureFromFile(std::string fileName, std::vector<std::pair<int,int>> &dataToPlot);
 void plotTemperature();
-
+void getTemperatureFromYahoo();
+void getTemperatureFromOWM();
