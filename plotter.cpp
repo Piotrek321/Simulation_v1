@@ -2,8 +2,6 @@
 Gnuplot gp;
 
 int *SharedMemoryPTR;
-std::vector<int> data;
-int currentLine; //To find out where is your current position in file
 
 int main(void)
 {
@@ -22,7 +20,7 @@ int main(void)
 
   SharedMemoryID   = shmget(MyKey, SHMSZ, 0666);
   SharedMemoryPTR  = (int *) shmat(SharedMemoryID, NULL, 0);
-  pid     	   = *SharedMemoryPTR;  
+  pid     	       = *SharedMemoryPTR;  
 
   while (1) 
   {      
@@ -51,6 +49,26 @@ int main(void)
 return 1;
 }
 
+void  SIGINT_handler(int sig)
+{
+  signal(sig, SIG_IGN);
+  printf("From SIGINT: just got a %d (SIGINT ^C) signal\n", sig);
+  //printData(SharedMemoryPTR);
+  //plotTemperature();
+  signal(sig, SIGINT_handler);
+}
+
+void plotChart(Gnuplot &gp, std::vector<int> valuesToPlot, std::vector<std::pair<int,int>> dataToPlot )
+{
+  gp << " set xdata time\n";
+  //gp << "set yrange [0:22]\n";
+  gp <<" set timefmt '%Y%m%d %H:M'\n";
+  gp << "plot 'abc.txt' using 1:3 title 'Yahoo' with lines, '' using 1:4 title 'OWM' with lines\n";
+  gp.flush();
+}
+
+
+/*
 //Is it possible to make it template-like? Make void * not int *
 void printData(int * pointerToMemory)
 {
@@ -62,7 +80,6 @@ void printData(int * pointerToMemory)
   {
     i++;
     s++;
-    //std::cout<< "*s: " << (*s) << "\n" ;  //To be deleted
     data.push_back(*s);
   }
   
@@ -75,6 +92,9 @@ void plotTemperature()
 
   plotChart(gp, data, dataToPlot);
 }
+
+
+
 
 void getTemperatureFromFile(std::string fileName, std::vector<std::pair<int,int>> &dataToPlot)
 {
@@ -99,47 +119,7 @@ void getTemperatureFromFile(std::string fileName, std::vector<std::pair<int,int>
   }
   ff.close();
 }
+std::vector<int> data;
+int currentLine; //To find out where is your current position in file
+*/
 
-void  SIGINT_handler(int sig)
-{
-  signal(sig, SIG_IGN);
-  printf("From SIGINT: just got a %d (SIGINT ^C) signal\n", sig);
-  printData(SharedMemoryPTR);
-  plotTemperature();
-  signal(sig, SIGINT_handler);
-}
-
-void plotChart(Gnuplot &gp, std::vector<int> valuesToPlot, std::vector<std::pair<int,int>> dataToPlot )
-{
-  gp << " set xdata time\n";
-  //gp << "set yrange [0:22]\n";
-  gp <<" set timefmt '%Y%m%d %H:M'\n";
-  gp << "plot 'abc.txt' using 1:3 title 'Yahoo' with lines, '' using 1:4 title 'OWM' with lines\n";
-  gp.flush();
-}
-
-void getTemperatureFromYahoo()
-{
-	CURL * crl = curl_easy_init();
-	if(crl)
-	{
-		curl_easy_setopt(crl, CURLOPT_URL, "https://query.yahooapis.com/v1/public/yql?q=select%20item.condition%20from%20weather.forecast%20where%20woeid%20%3D%2012577937&format=json&env=store%3A%2F%2Fdatatables.org%2Falltableswithkeys");
-//		curl_easy_setopt(crl, CURLOPT_URL, "https://query.yahooapis.com/v1/public/yql?q=select%20item.condition%20from%20weather.forecast%20where%20woeid%20%3D%2012577937&format=json&env=store%3A%2F%2Fdatatables.org%2Falltableswithkeys");
-
-		curl_easy_setopt(crl, CURLOPT_HTTPGET, 1L);
-		curl_easy_perform(crl);
-		curl_easy_cleanup(crl);
-	}
-}
-
-void getTemperatureFromOWM()
-{
-	CURL * crl = curl_easy_init();
-	if(crl)
-	{
-		curl_easy_setopt(crl, CURLOPT_URL, "api.openweathermap.org/data/2.5/weather?id=3093133&appid=b5df5912a869b5cf1cfa4899b10da754");
-		curl_easy_setopt(crl, CURLOPT_HTTPGET, 1L);
-		curl_easy_perform(crl);
-		curl_easy_cleanup(crl);
-	}
-}
