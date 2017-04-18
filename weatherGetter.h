@@ -7,6 +7,9 @@
 #include <iostream>
 #include <vector>
 #include <curl/curl.h>
+#include <sstream> 
+#include <boost/property_tree/json_parser.hpp>
+
 
 #define SHMSZ  100
 #define KEY_VALUE 5678
@@ -15,5 +18,5 @@ void  SIGQUIT_handler(int);
 void writeDataToMemory(std::vector<int> data, pid_t * pointerToMemory);
 void signal_received(int sig, siginfo_t *info, void *context);
 void prepareDataForTest(std::vector<int> &data, int sizeOfData);
-void getTemperatureFromYahoo();
-void getTemperatureFromOWM();
+std::string getTemperatureFromYahoo();
+std::string getTemperatureFromOWM();
