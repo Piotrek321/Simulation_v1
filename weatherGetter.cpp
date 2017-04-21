@@ -10,6 +10,8 @@ bool firstSignal = true;
 bool shouldDataBePrepared = false;
 std::string getTemperatureFromJSON(std::stringstream &jsonData);
 std::string getTemperatureFromJSON2(std::stringstream &jsonData);
+void collectTemperature();
+
 int main(void)
 {
   pid_t pid = getpid();
@@ -32,7 +34,8 @@ int main(void)
   SharedMemoryID   = shmget(MyKey, SHMSZ, IPC_CREAT | 0666);
   SharedMemoryPtr  = (int *) shmat(SharedMemoryID, NULL, 0);
   *SharedMemoryPtr = pid; 
-
+  
+  int counter =0;
   for (;;) 
   {        
     std::cout << "Waiting for signal from another process.\n"; //To be deleted
@@ -41,13 +44,19 @@ int main(void)
       if(shouldDataBePrepared == true)
       {	
         prepareDataForTest(data, SHMSZ);
-	writeDataToMemory(data, SharedMemoryPtr);
-	kill(anotherProcessPid, SIGINT);
-	shouldDataBePrepared = false;
+				writeDataToMemory(data, SharedMemoryPtr);
+				kill(anotherProcessPid, SIGINT);
+				shouldDataBePrepared = false;
       }
 				
      }
      sleep(3); //To be deleted 
+	   if(++counter == 1800)
+		 {	
+			 collectTemperature();
+			 counter =0;
+			 kill(anotherProcessPid, SIGINT);
+     }
     }
 
 return 1;
@@ -62,6 +71,44 @@ void  SIGQUIT_handler(int sig)
   exit(3);
 }
 
+void collectTemperature()
+{
+  std::stringstream ss, ss2;
+
+  std::ofstream outfile;
+
+  outfile.open("test.txt", std::ios_base::app);
+  time_t t = time(NULL);
+  struct tm tm = *localtime(&t);
+
+ outfile << (tm.tm_year + 1900) ;
+ if( (tm.tm_mon + 1 ) <10)
+ {
+		outfile << "0";
+  }
+  outfile << tm.tm_mon + 1;
+ 
+  outfile << tm.tm_mday << " " << tm.tm_hour <<":";
+  if(tm.tm_min <10)
+  {
+  	outfile << "0";
+  }
+  outfile << tm.tm_min;
+
+	ss << getTemperatureFromYahoo();
+	std::string tempFromYahoo = getTemperatureFromJSON(ss);
+	std::cout <<"Yahoo weather: " <<   tempFromYahoo<<"\n";
+	outfile << " "<< tempFromYahoo;
+
+	ss2 << getTemperatureFromOWM();
+	std::string tempFromOWM = getTemperatureFromJSON2(ss2);
+
+
+	std::cout <<"OWM: "<< tempFromOWM <<"\n";
+	outfile << " " <<tempFromOWM << "\n";
+	outfile.close();
+}
+
 void signal_received(int sig, siginfo_t *info, void *context) 
 {
   if(firstSignal == true) 
@@ -72,21 +119,7 @@ void signal_received(int sig, siginfo_t *info, void *context)
   }
   shouldDataBePrepared = true;
   multipl ++;
-std::stringstream ss, ss2;
-
-  std::ofstream outfile;
-
-  outfile.open("test.txt", std::ios_base::app);
-  outfile << "Data"; 
-ss << getTemperatureFromYahoo();
-//std::cout << ss.str() << "\n";
-std::cout <<"Yahoo weather: " <<  getTemperatureFromJSON(ss) <<"\n";
-
-ss2 << getTemperatureFromOWM();
-//std::cout << ss.str() << "\n";
-std::cout <<"OWM: "<< getTemperatureFromJSON2(ss2) <<"\n";
-//getTemperatureFromOWM();
-outfile.close();
+  collectTemperature();
 }
 
 std::string getTemperatureFromJSON(std::stringstream &jsonData)

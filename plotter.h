@@ -7,7 +7,7 @@
 
 void  SIGINT_handler(int sig);
 void plotChart(Gnuplot &gp,std::vector<int> valuesToPlot, std::vector<std::pair<int,int>> dataToPlot );
-
+void plotChart(Gnuplot &gp);
 
 /*
 void getTemperatureFromFile(std::string fileName, std::vector<std::pair<int,int>> &dataToPlot);

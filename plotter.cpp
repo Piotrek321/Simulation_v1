@@ -55,15 +55,17 @@ void  SIGINT_handler(int sig)
   printf("From SIGINT: just got a %d (SIGINT ^C) signal\n", sig);
   //printData(SharedMemoryPTR);
   //plotTemperature();
+  plotChart(gp);
   signal(sig, SIGINT_handler);
 }
 
-void plotChart(Gnuplot &gp, std::vector<int> valuesToPlot, std::vector<std::pair<int,int>> dataToPlot )
+void plotChart(Gnuplot &gp)
 {
+gp << "set autoscale xy\n";
   gp << " set xdata time\n";
   //gp << "set yrange [0:22]\n";
   gp <<" set timefmt '%Y%m%d %H:M'\n";
-  gp << "plot 'abc.txt' using 1:3 title 'Yahoo' with lines, '' using 1:4 title 'OWM' with lines\n";
+  gp << "plot 'test.txt' using 1:3 title 'Yahoo' with lines, '' using 1:4 title 'OWM' with lines\n";
   gp.flush();
 }
 
